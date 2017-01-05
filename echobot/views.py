@@ -15,20 +15,20 @@ from bs4 import BeautifulSoup
 line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(settings.LINE_CHANNEL_SECRET)
 taiwan=['臺北市','新北市','桃園市','臺中市','臺南市','高雄市','基隆市','新竹縣','新竹市','苗栗縣','彰化縣','南投縣','雲林縣','嘉義縣','嘉義市','屏東縣','宜蘭縣','花蓮縣','臺東縣','澎湖縣','金門縣','連江縣']
-weather_url='http://opendata.cwb.gov.tw/opendataapi?dataid=F-C0032-001&authorizationkey=CWB-704B646E-753E-4DB3-A41E-3CD4149DAF04'
+weather_url=settings.WEATHER_URL
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_text_message(event):
     final_reply = event.message.text  #if not searching for weather,echo it
     for country in taiwan:
         if country in event.message.text: #if there is city that match input string
-            r=requests.get(weather_url)
-            soup = BeautifulSoup(r.text,"html.parser")
-            s=soup.find(string=country) #find where the tag is
-            s=s.find_parents("location")
-            for q in s:
-                w=q.find('parametername').string  #fin the first weather
-            final_reply=country + w #concat with country name
+            website=requests.get(weather_url)
+            soup = BeautifulSoup(website.text,"html.parser")
+            str_pointer=soup.find(string=country) #find where the tag is
+            str_pointer=str_pointer.find_parents("location")
+            for fragment in str_pointer:
+                weather=fragment.find('parametername').string  #find the first weather
+            final_reply=country + weather #concat with country name
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=final_reply) #reply
